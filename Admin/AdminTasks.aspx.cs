@@ -9,6 +9,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Configuration;
 using System.Text;
+using System.Net.Mail;
 
 
 public class Task1
@@ -42,6 +43,37 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
         AddDepartmentstoSidebar();
         loadTimeline();
         LoadTimelineJS();
+        SetNameAndDescription();
+    }
+
+    private void SetNameAndDescription()
+    {
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        con.Open();
+        SqlCommand cmd = con.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "select ProjectName, Description from Projects where Projects.ProjectID = " + Label1.Text;
+        cmd.Connection = con;
+
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        do
+        {
+            rd.Read();
+            projTitle.Text = (string)rd[0];
+            if (!(rd[1] is DBNull))
+                projDescription.Text = (string)rd[1];
+        }
+        while (rd.Read());
+
+        con.Close();
+
+    }
+
+    protected void Search_Click(object sender, EventArgs e)
+    {
+        Session["query"] = searchInput.Text;
+        Response.Redirect("../Admin/Search.aspx");
     }
 
     //injects JS into aspx via string builder
@@ -61,7 +93,7 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
     {
         List<Task1> task = new List<Task1>();
         SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
-        SqlCommand cmd = new SqlCommand("select TaskName, StartDate, DateCompleted from Tasks where DateCompleted is not null and StartDate is not null", conn);
+        SqlCommand cmd = new SqlCommand("select TaskName, StartDate, DateCompleted from Tasks where ProjectID=" + Label1.Text, conn);
         SqlDataReader dr;
         try
         {
@@ -98,11 +130,7 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
 
         abc = Createstring(task);
     }
-    protected void Search_Click(object sender, EventArgs e)
-    {
-        Session["query"] = searchInput.Text;
-        Response.Redirect("../Admin/Search.aspx");
-    }
+
 
     //creates a string to producted the timeline (array of arrays O(n^2))
     protected string Createstring(List<Task1> task)
@@ -229,8 +257,8 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
             con.Open();
             SqlCommand cmd = con.CreateCommand();
             cmd.CommandType = CommandType.Text;
-            //cmd.CommandText = "select AssignmentNote, AssignmentEnd, Position from Assignment, Group1 where Group1.ProjectId = Assignment.ProjectId and Assignment.GroupID =" + a + " group by AssignmentNote, AssignmentEnd, Position order by MAX(Assignment.Position) asc;";
-            cmd.CommandText = "SELECT DISTINCT TaskID, TaskName, MAX(Tasks.CurrentPosition) as Position, E.FirstName as EmployeeName FROM Tasks, Phase, Employee as E where Phase.ProjectId = Tasks.ProjectId and Tasks.PhaseID =" + a + " and Tasks.AssignedEmployeeID = E.EmployeeID GROUP BY TaskID, TaskName, E.FirstName ORDER BY Position ASC, TaskID";
+            //cmd.CommandText = "SELECT DISTINCT TaskID, TaskName, MAX(Tasks.CurrentPosition) as Position, E.FirstName as EmployeeName FROM Tasks, Phase, Employee as E where Phase.ProjectId = Tasks.ProjectId and Tasks.PhaseID =" + a + " and Tasks.AssignedEmployeeID = E.EmployeeID GROUP BY TaskID, TaskName, E.FirstName ORDER BY Position ASC, TaskID";
+            cmd.CommandText = "SELECT DISTINCT TaskID, TaskName, MAX(Tasks.CurrentPosition) as Position, E.FirstName as EmployeeName FROM Tasks, Phase, Employee as E, Projects where Tasks.ProjectId = " + Label1.Text + " and Tasks.PhaseID =" + a + " and Tasks.AssignedEmployeeID = E.EmployeeID GROUP BY TaskID, TaskName, E.FirstName ORDER BY Position ASC, TaskID";
             cmd.ExecuteNonQuery();
             DataTable dt = new DataTable();
             SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -258,6 +286,75 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
             }
 
         }
+    }
+    protected void meme()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        attach.Open();
+        SqlCommand cmd = new SqlCommand();
+
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "select * from Phase where ProjectID=" + Label1.Text +" and CurrentPosition=1";
+        cmd.Connection = attach;
+
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            
+                Session["phaseID"] = rd[0];
+             
+        }
+
+        attach.Close();
+        
+
+
+    }
+
+    private void Insert()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "insert into Tasks(PhaseID, ProjectID, StartDate, TaskName, CurrentPosition,  DateCompleted, AssignedEmployeeID) values (" + Session["phaseID"] + "," + Label1.Text + " , '" + StartDate.Text + "', '" + TaskName.Text + "', 1, '" + EndDate.Text + "', " + Session["emp"] + ")";
+        try
+        {
+            //Response.Write(Session["phaseID"]);
+            //Response.Write(Label1.Text);
+            //Response.Write(StartDate.Text);
+            //Response.Write(TaskName.Text);
+            //Response.Write(EndDate.Text);
+            //Response.Write(Session["emp"]);
+
+            attach.Open();
+            cmd.ExecuteNonQuery();
+            Response.Write("Task Saved");
+        }
+        catch
+        {
+            Response.Write("Error when saving on database. Please input values");
+            attach.Close();
+        }
+        StartDate.Text = "";
+        EndDate.Text = "";
+        
+
+        attach.Close();
+    }
+    protected void click1(object sender, EventArgs e)
+    {
+        StartDate.Text += ":00";
+        EndDate.Text += ":00";
+        meme();//gets phaseID for query
+        Response.Write(StartDate.Text);
+
+        Response.Write(EndDate.Text);
+        Insert();
+        Response.Redirect(Request.RawUrl);
+
     }
 
     public static void UpdateDatabaseRecord(int phaseID, string taskName, int currentPosition, string employeeName)
@@ -305,7 +402,7 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
         {
             Label lbl = args.Item.FindControl("Label2") as Label;      //Assignment.Position
             b = lbl.Text.ToString();
-            Response.Write(b);
+            //Response.Write(b);
 
         }
     }
@@ -338,6 +435,365 @@ public partial class Admin_AdminTasks : System.Web.UI.Page
         da.Fill(dt);
         Repeater3.DataSource = dt;
         Repeater3.DataBind();
+    }
+
+
+
+    private void Insert1()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "insert into Projects(ProjectName, isPublic, StartDate, Deadline, ManagerID) values ('" + ProjName.Text + "', 0,'" + StartDate.Text + "', '" + EndDate.Text + "'," + Session["emp"] + " );";
+        try
+        {
+            //Response.Write(ProjName.Text);
+            //Response.Write(StartDate.Text);
+            //Response.Write(EndDate.Text);
+            //Response.Write(Session["emp"]);
+
+
+            attach.Open();
+            cmd.ExecuteNonQuery();
+            Response.Write("Project Saved");
+        }
+        catch
+        {
+            Response.Write("Error when saving on database. Please input values");
+            attach.Close();
+        }
+        StartDate.Text = "";
+        EndDate.Text = "";
+
+
+        attach.Close();
+    }
+
+    protected void getProjectID()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        attach.Open();
+        SqlCommand cmd = new SqlCommand();
+
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "SELECT TOP 1 * FROM Projects ORDER BY ProjectID DESC";
+        cmd.Connection = attach;
+
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            Session["prgID"] = rd[0];
+        }
+
+        attach.Close();
+    }
+    protected void getPhaseID()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        attach.Open();
+        SqlCommand cmd = new SqlCommand();
+
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "SELECT TOP 1 * FROM Phase ORDER BY PhaseID DESC";
+        cmd.Connection = attach;
+
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            Session["phsID"] = rd[0];
+            Session["prgggID"] = rd[1];
+        }
+
+        attach.Close();
+    }
+
+    protected void addTemplatedPhases_tasks()
+    {
+        getProjectID();
+
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "insert into Phase(ProjectID, PhaseName, CurrentPosition) values(" + Session["prgID"] + ", 'In-Progress', 1); insert into Phase(ProjectID, PhaseName, CurrentPosition) values(" + Session["prgID"] + ", 'To-Do', 2);insert into Phase(ProjectID, PhaseName, CurrentPosition) values(" + Session["prgID"] + ", 'Completed', 3);";
+
+        attach.Open();
+        cmd.ExecuteNonQuery();
+        Response.Write("Project Saved");
+        getPhaseID();
+        insertTasks();
+
+        attach.Close();
+    }
+    protected void insertTasks()
+    {
+        getProjectID();
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        int phase = Convert.ToInt32(Session["phsID"]);
+        int phase1 = phase - 1;
+        int phase2 = phase1 - 1;
+        cmd.CommandText = "insert into Tasks(PhaseID, ProjectID, StartDate, TaskName, CurrentPosition, DateCompleted, AssignedEmployeeID) values(" + phase + " , " + Session["prgggID"] + " , '2018-03-30', 'Task 3', 1, '2018-04-03', " + Session["emp"] + ");insert into Tasks(PhaseID, ProjectID, StartDate, TaskName, CurrentPosition, DateCompleted, AssignedEmployeeID) values(" + phase1 + " , " + Session["prgggID"] + " , '2018-03-30', 'Task 2', 1, '2018-04-03', " + Session["emp"] + ");insert into Tasks(PhaseID, ProjectID, StartDate, TaskName, CurrentPosition, DateCompleted, AssignedEmployeeID) values(" + phase2 + " , " + Session["prgggID"] + " , '2018-03-30', 'Task 1', 1, '2018-04-03', " + Session["emp"] + ");";
+
+
+        attach.Open();
+        cmd.ExecuteNonQuery();
+
+
+
+        attach.Close();
+    }
+
+    protected void button2_Click(object sender, EventArgs e)
+    {
+        StartDate.Text += ":00";
+        EndDate.Text += ":00";
+
+        Insert1();
+        addTemplatedPhases_tasks();
+        Response.Redirect(Request.RawUrl);
+    }
+
+    protected void AddNewDepartmentButton(object sender, EventArgs e)
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "insert into Department(ManagerID, DepartmentName) values (" + Session["emp"] + ", '" + ProjNameDept.Text + "')";
+        try
+        {
+            attach.Open();
+            cmd.ExecuteNonQuery();
+            Response.Write("Department Saved");
+        }
+        catch
+        {
+            Response.Write("Error when saving on database. Please input values");
+            attach.Close();
+        }
+        attach.Close();
+        Response.Redirect(Request.RawUrl);
+    }
+    protected void findMAxPhasePostion()
+    {
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "select max(CurrentPosition) from Phase where ProjectID=" + Label1.Text;
+        attach.Open();
+        cmd.ExecuteNonQuery();
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            Session["maxPhase"] = rd[0];
+        }
+
+        attach.Close();
+    }
+    protected void Button3_Click(object sender, EventArgs e)
+    {
+        getProjectID();
+        findMAxPhasePostion();
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        int phase = Convert.ToInt32(Session["phsID"]);
+        int max;
+        try { max = Convert.ToInt32(Session["maxPhase"]) + 1 ; } catch
+        {
+             max = 1;
+        }
+        
+        //Response.Write("   ");
+        //Response.Write(Label1.Text);
+        //Response.Write("   ");
+        //Response.Write(phaseee.Text);
+        //Response.Write("   ");
+        //Response.Write(max);
+        cmd.CommandText = "insert into Phase(ProjectID, PhaseName, CurrentPosition) values(" + Label1.Text + ", '" + phaseee.Text + "', " + max + ")";
+
+        try
+        {
+            attach.Open();
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            Response.Write("   ");
+            Response.Write(Session["phsID"]);
+            Response.Write("   ");
+            Response.Write(Session["prgggID"]);
+            Response.Write("   ");
+            Response.Write(Session["emp"]);
+        }
+
+        attach.Close();
+        
+        getPhaseID();
+        insertTask4NewPhase();
+        Response.Redirect(Request.RawUrl);
+    }
+
+    protected void insertTask4NewPhase()
+    {
+        getProjectID();
+        getPhaseID();
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        SqlCommand cmd = attach.CreateCommand();
+        cmd.CommandType = CommandType.Text;
+        int phase = Convert.ToInt32(Session["phsID"]);
+        int max;
+        try {
+            max = Convert.ToInt32(Session["maxPhase"]) + 1;
+        } catch
+        {
+            max = 1;
+        }
+        cmd.CommandText = "insert into Tasks(PhaseID, ProjectID, StartDate, TaskName, CurrentPosition, DateCompleted, AssignedEmployeeID) values(" + Session["phsID"] + " , " + Session["prgggID"] + " , '2018-03-30', 'New Task', 1, '2018-04-03', " + Session["emp"] + ")";
+
+        try
+        {
+            attach.Open();
+            cmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            Response.Write("   ");
+            Response.Write(Session["phsID"]);
+            Response.Write("   ");
+            Response.Write(Session["prgggID"]);
+            Response.Write("   ");
+            Response.Write(Session["emp"]);
+        }
+        attach.Close();
+       // Response.Redirect(Request.RawUrl);
+    }
+
+
+
+    protected void sendMail(object sender, EventArgs e)
+    {
+        if (CheckIfEmailExists())
+        {
+            SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+            SqlCommand cmd = attach.CreateCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = "insert into Works_On(ProjectID, EmployeeID, DepartmentID) values("+Label1.Text+","+ Session["empID"]+","+Session["department"] +")";
+            try
+            {
+                attach.Open();
+                cmd.ExecuteNonQuery();
+                Page.RegisterStartupScript("UserMsg", "<script>alert('Successfully Added User...');if(alert){}</script>");
+                System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+                mail.To.Add("" + Session["empEmail"]);
+                mail.From = new MailAddress("projectmanagement.dash1@gmail.com", "DASH", System.Text.Encoding.UTF8);
+                mail.Subject = "INVITE from " + Session["empName"] + ": Dash Project Management";
+                mail.SubjectEncoding = System.Text.Encoding.UTF8;
+                mail.Body = Session["empName"] + " has added you to a Project";
+                mail.BodyEncoding = System.Text.Encoding.UTF8;
+                mail.IsBodyHtml = true;
+                mail.Priority = MailPriority.High;
+                SmtpClient client = new SmtpClient();
+                client.Credentials = new System.Net.NetworkCredential("projectmanagement.dash1@gmail.com", "Dankmeme1234!");
+                client.Port = 587;
+                client.Host = "smtp.gmail.com";
+                client.EnableSsl = true;
+                try
+                {
+                    client.Send(mail);
+                    Page.RegisterStartupScript("UserMsg", "<script>alert('Successfully Sent...');if(alert){}</script>");
+                }
+                catch (Exception ex)
+                {
+                    Exception ex2 = ex;
+                    string errorMessage = string.Empty;
+                    while (ex2 != null)
+                    {
+                        errorMessage += ex2.ToString();
+                        ex2 = ex2.InnerException;
+                    }
+                    Page.RegisterStartupScript("UserMsg", "<script>alert('Sending Failed...');if(alert){}</script>");
+                }
+
+            }
+            catch
+            {
+                Response.Write("Error adding user to Project");
+                attach.Close();
+            }
+
+            attach.Close();
+        }
+        else
+        {
+
+            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+            mail.To.Add(email.Text);
+            mail.From = new MailAddress("projectmanagement.dash1@gmail.com", "DASH", System.Text.Encoding.UTF8);
+            mail.Subject = "INVITE from " + Session["empName"] +": Dash Project Management";
+            mail.SubjectEncoding = System.Text.Encoding.UTF8;
+            mail.Body = Session["empName"] + " would Like you to join Dash: http://localhost:50019/Register.aspx";
+            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.IsBodyHtml = true;
+            mail.Priority = MailPriority.High;
+            SmtpClient client = new SmtpClient();
+            client.Credentials = new System.Net.NetworkCredential("projectmanagement.dash1@gmail.com", "Dankmeme1234!");
+            client.Port = 587;
+            client.Host = "smtp.gmail.com";
+            client.EnableSsl = true;
+            try
+            {
+                client.Send(mail);
+                Page.RegisterStartupScript("UserMsg", "<script>alert('Successfully Sent...');if(alert){}</script>");
+            }
+            catch (Exception ex)
+            {
+                Exception ex2 = ex;
+                string errorMessage = string.Empty;
+                while (ex2 != null)
+                {
+                    errorMessage += ex2.ToString();
+                    ex2 = ex2.InnerException;
+                }
+                Page.RegisterStartupScript("UserMsg", "<script>alert('Sending Failed...');if(alert){}</script>");
+            }
+        }
+    }
+    protected bool CheckIfEmailExists()
+    {
+        //encrypt user/pass and create new connection
+        SqlConnection attach = new SqlConnection(ConfigurationManager.ConnectionStrings["connect"].ToString());
+        attach.Open();
+        SqlCommand cmd = new SqlCommand();
+
+        cmd.CommandType = CommandType.Text;
+        cmd.CommandText = "select * from Employee where Email COLLATE Latin1_General_CS_AS ='" + email.Text+"'";
+        cmd.Connection = attach;
+
+        SqlDataReader rd = cmd.ExecuteReader();
+
+        while (rd.Read())
+        {
+            if (rd[8].ToString().Length > 1)
+            {
+                Session["empID"] = rd[0];
+                return true;
+            }
+        }
+
+        attach.Close();
+        return false;
     }
 }
 //WORKING ON DRAG AND DROP FOR TASKS

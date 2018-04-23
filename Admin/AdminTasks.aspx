@@ -15,8 +15,13 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../css/DashUI.css" />
     <link rel="stylesheet" type="text/css" href="../css/task.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery.timepicker.css" />
+    <link href="css/font-awesome.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/Search.css" />
+    <link rel="stylesheet" type="text/css" href="../css/PopUp Input.css" />
+
     <style>
         .navbar {
             padding: 15px 10px;
@@ -37,70 +42,100 @@
     </style>
 </head>
 <body>
+    <form id="Form1" runat="server">
+
+        <div class="wrapper">
+            <!-- Sidebar Holder -->
+            <nav id="sidebar">
+                <div class="sidebar-header">
+                    <h3>DASH</h3>
+                    <strong>DASH</strong>
+                </div>
+
+                <ul class="list-unstyled components">
+                    <li class="active">
 
 
-    <div class="wrapper">
-        <!-- Sidebar Holder -->
-        <nav id="sidebar">
-            <div class="sidebar-header">
-                <h3>DASH</h3>
-                <strong>DASH</strong>
-            </div>
-
-            <ul class="list-unstyled components">
-                <li class="active">
-
-
-                    <a href="../Dashboard.aspx">
-                        <i class="glyphicon glyphicon-briefcase"></i>
-                        Dashboard
+                        <a href="../Admin/AdminDashboard.aspx">
+                            <i class="glyphicon glyphicon-briefcase"></i>
+                            Dashboard
                         </a>
-                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">
-                        <i class="glyphicon glyphicon-home"></i>
-                        Departments
+                        <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false">
+                            <i class="glyphicon glyphicon-home"></i>
+                            Departments
                         </a>
 
-                    <%-- Need repeater here --%>
-                    <ul class="collapse list-unstyled" id="homeSubmenu">
-                        <asp:Repeater ID="Repeater2" runat="server">
-                            <ItemTemplate>
-                                <li><a href="../Projects/Project.aspx?Name=+<%# Eval("DepartmentID")%>"><%# Eval("DepartmentName")%></a></li>
-                            </ItemTemplate>
-                        </asp:Repeater>
-                    </ul>
-                </li>
-                <li>
+                        <%-- Need repeater here --%>
+                        <ul class="collapse list-unstyled" id="homeSubmenu">
+                            <asp:Repeater ID="Repeater2" runat="server">
+                                <ItemTemplate>
+                                    <li><a href="../Admin/AdminProject.aspx?Name=+<%# Eval("DepartmentID")%>"><%# Eval("DepartmentName")%></a></li>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                            <li><a>
+                                <div id="contact1">Add Department</div>
 
-                    <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">
-                        <i class="glyphicon glyphicon-duplicate"></i>
-                        Private Boards
+                                <div id="contactForm1">
+                                    <h3>Add New Department</h3>
+                                    <asp:Label ID="Label12" runat="server" Text="Name:"></asp:Label>
+                                    <asp:TextBox name="Title" ID="ProjNameDept" runat="server" PlaceHolder="Department Name:"></asp:TextBox>
+                                    <br />
+                                    <br />
+                                    <asp:Button ID="Button2" runat='server' type="button" class='btn btn-success' CommandName='taskform' Text='Submit' OnClick="AddNewDepartmentButton"></asp:Button>
+                                </div>
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li>
+
+                        <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false">
+                            <i class="glyphicon glyphicon-duplicate"></i>
+                            Private Boards
                         </a>
-                    <ul class="collapse list-unstyled" id="pageSubmenu">
-                        <asp:Repeater ID="Repeater3" runat="server">
-                            <ItemTemplate>
-                                <li><a href="../Admin/AdminTasks.aspx?Name=+<%# Eval("ProjectID")%>"><%# Eval("ProjectName")%></a></li>
-                            </ItemTemplate>
-                        </asp:Repeater>
-                    </ul>
-                </li>
-                <li>
-                    <a href="../Timesheet.aspx">
-                        <i class="glyphicon glyphicon-link"></i>
-                        TimeSheet
+                        <ul class="collapse list-unstyled" id="pageSubmenu">
+                            <asp:Repeater ID="Repeater3" runat="server">
+                                <ItemTemplate>
+                                    <li><a href="../Admin/AdminTasks.aspx?Name=+<%# Eval("ProjectID")%>"><%# Eval("ProjectName")%></a></li>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                            <li><a>
+                                <div id="contact">Add Private Board</div>
+
+                                <div id="contactForm">
+                                    <h3>Add New Private Board</h3>
+                                    <asp:Label ID="Label313" runat="server" Text="Name:"></asp:Label>
+                                    <asp:TextBox name="Title" ID="ProjName" runat="server" PlaceHolder="Name"></asp:TextBox>
+                                    <br />
+                                    <asp:Label ID="Label3" runat="server" Text="Start Date:"></asp:Label>
+                                    <asp:TextBox type="datetime-local" name="StartDate1" ID="TextBox1" runat="server"></asp:TextBox>
+                                    <br />
+                                    <asp:Label ID="Label4" runat="server" Text="End Date:"></asp:Label>
+                                    <asp:TextBox type="datetime-local" name="EndDate1" ID="TextBox2" runat="server"></asp:TextBox>
+                                    <br />
+                                    <br />
+                                    <asp:Button ID="Button1" runat='server' type="button" class='btn btn-success' CommandName='taskform' Text='Submit' OnClick="button2_Click"></asp:Button>
+                                </div>
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li>
+                    <a href="../Admin/AdminTimesheet.aspx">
+                            <i class="glyphicon glyphicon-link"></i>
+                            TimeSheet
                         </a>
-                </li>
+                    </li>
 
-            </ul>
+                </ul>
 
-            <%--<ul class="list-unstyled CTAs">
+                <%--<ul class="list-unstyled CTAs">
                     <li><a href="https://bootstrapious.com/tutorial/files/sidebar.zip" class="download">Download source</a></li>
                     <li><a href="https://bootstrapious.com/p/bootstrap-sidebar" class="article">Back to article</a></li>
                 </ul>--%>
-        </nav>
+            </nav>
 
-        <!-- Page Content Holder -->
-        <div id="content">
-            <form id="Form1" runat="server">
+            <!-- Page Content Holder -->
+            <div id="content">
+
                 <nav class="navbar">
                     <div class="container-fluid">
 
@@ -134,17 +169,17 @@
                                 <li><a href="#">Page</a></li>
                                 <li><a href="#">Page</a></li>
                                 <li><a href="#">Page</a></li>
-                                <li><a href="#">Page</a></li>
                             </ul>
                         </div>
                     </div>
                 </nav>
 
-                <h2>Collapsible Sidebar Using Bootstrap 3</h2>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <h2><asp:Label ID="projTitle" runat="server" /></h2>
+                <p><asp:Label ID="projDescription" runat="server" /></p>
+                
 
-
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 
 
 
@@ -171,9 +206,7 @@
                         <ItemTemplate>
                             <!-- Repeated data -->
                             <ol class="kanban To-do">
-                                <div class="text center" contenteditable="true">
-                                    <h2><%# Eval("PhaseName") %></h2><br />
-                                </div>
+                                <h2><%# Eval("PhaseName")%></h2>
                                 <asp:Label ID="lblName" runat="server" Visible="false" Text='<%#Eval("PhaseID") %>'></asp:Label>
                                 <h3 style="display: none"><%#Eval("PhaseID") %></h3>
                                 <asp:Repeater ID="ChildRepeater" runat="server" OnItemDataBound="ChildRepeater_ItemDataBound">
@@ -181,12 +214,13 @@
                                         <!-- Nested repeated data -->
                                         <li class="dd-item">
                                             <asp:Label ID="Label2" runat="server" Visible="false" Text='<%#Eval("Position") %>'></asp:Label>
-                                            <div class="text center" contenteditable="true">
-                                                <h2><%# Eval("TaskName") %></h2><br />
-                                            </div>
-                                            <asp:Label ID="assignedTo" runat="server" Text="Assigned to:" />
-                                            <div style="font-weight: normal">
-                                                <%# Eval("EmployeeName") %> <br />
+                                            
+                                                <h3 class="title dd-handle"><b><%# Eval("TaskName")%> </b></h3>
+                                            
+
+                                            <div class="text" contenteditable="true">
+
+                                                <b><%# Eval("EmployeeName") %></b><br />
                                             </div>
                                             <i class="material-icons" id="label blue">label</i><div class="actions">
                                                 <i class="material-icons" id="color">palette</i><i class="material-icons">edit</i><i class="material-icons">insert_link</i><i class="material-icons">attach_file</i>
@@ -196,9 +230,7 @@
 
                                     </ItemTemplate>
                                 </asp:Repeater>
-                                <div class="actions">
-                                    <asp:Button runat="server" class="addbutt" CommandName="addnew"><%--<i class="material-icons">control_point</i>--%></asp:Button>
-                                </div>
+                                
                             </ol>
 
                         </ItemTemplate>
@@ -206,19 +238,58 @@
 
 
                     <menu class="kanban">
-                        <button><i class="material-icons">playlist_add</i> Add new Column</button>
+                        
+                       <div id="contact2" class="btn btn-primary">Add Task</div>
+                        <div id="contactForm2">
+                            <h3>Add New Task</h3>
+                            <asp:Label ID="lbl1" runat="server" Text="Task Name:" />
+                            <asp:TextBox name="Title" ID="TaskName" runat="server" PlaceHolder="Name"></asp:TextBox>
+                            <br />
+                            <asp:Label ID="Label312" runat="server" Text="Start Date:"></asp:Label>
+                            <asp:TextBox type="datetime-local" name="StartDate1" ID="StartDate" runat="server"></asp:TextBox>
+                            <br />
+                            <asp:Label ID="Label13" runat="server" Text="End Date:"></asp:Label>
+                            <asp:TextBox type="datetime-local" name="EndDate1" ID="EndDate" runat="server"></asp:TextBox>
+                            <br />
+                            <asp:Label ID="lbl2" runat="server" Text="Description:"></asp:Label>
+                            <asp:TextBox name="Description" ID="Description" runat="server" PlaceHolder="Description"></asp:TextBox>
+                            <br />
+                            <br />
+                            <asp:Button ID="taskbutton" runat='server' class='btn btn-success' CommandName='taskform' Text='Submit' OnClick="click1"></asp:Button>
+                        </div>
+
+                        <div id="contact3" class="btn btn-primary">Add Phase</div>
+                        <div id="contactForm3">
+                            <h3>Add New Phase</h3>
+                            <asp:Label ID="lbl3" runat="server" Text="Phase Name:" />
+                            <asp:TextBox name="Title" ID="phaseee" runat="server" PlaceHolder="Name"></asp:TextBox>
+                            <br />
+                            <br />
+                            <asp:Button ID="Button3" runat='server' class='btn btn-success' CommandName='taskform' Text='Submit' OnClick="Button3_Click"></asp:Button>
+                        </div>
+
+                        <div id="contact4" class="btn btn-primary">Add Employee To Project</div>
+
+                        <div id="contactForm4">
+                            <h3>Add Employee To Project</h3>
+                            <asp:Label ID="lbl4" runat="server" Text="Email:" />
+                            <asp:TextBox name="Title" ID="email" runat="server" PlaceHolder="Email: "></asp:TextBox>
+                            <br />
+                            <br />
+                            <asp:Button ID="Button4" runat='server' type="button" class='btn btn-success' CommandName='taskform' Text='Submit' OnClick="sendMail"></asp:Button>
+                        </div>
 
                     </menu>
 
 
                 </div>
-            </form>
-            <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-            <div id="chart_div"></div>
+
+                <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+                <div id="chart_div"></div>
+            </div>
         </div>
-    </div>
 
-
+    </form>
 
 
 
@@ -679,6 +750,13 @@
     </script>
 
     <script type="text/javascript">
+        $(document).ready(function () {
+            $('#update').click(saveData);
+        });
+
+    </script>
+
+    <script type="text/javascript">
         // sends task data to backend to be stored in database
         function saveData() {
             var str = JSON.stringify(taskList);
@@ -768,6 +846,101 @@
                 alert("Changes were saved");
             }
         }
+    </script>
+    <script>
+        $(function () {
+
+            // contact form animations
+            $('#contact').click(function () {
+                $('#contactForm').fadeToggle();
+            })
+            $(document).mouseup(function (e) {
+                var container = $("#contactForm");
+
+                if (!container.is(e.target) // if the target of the click isn't the container...
+                    && container.has(e.target).length === 0) // ... nor a descendant of the container
+                {
+                    container.fadeOut();
+                }
+            });
+
+        });
+    </script>
+    <script>
+        $(function () {
+
+            // contact form animations
+            $('#contact1').click(function () {
+                $('#contactForm1').fadeToggle();
+            })
+            $(document).mouseup(function (e) {
+                var container = $("#contactForm1");
+
+                if (!container.is(e.target) // if the target of the click isn't the container...
+                    && container.has(e.target).length === 0) // ... nor a descendant of the container
+                {
+                    container.fadeOut();
+                }
+            });
+
+        });
+    </script>
+    <script>
+        $(function () {
+
+            // contact form animations
+            $('#contact2').click(function () {
+                $('#contactForm2').fadeToggle();
+            })
+            $(document).mouseup(function (e) {
+                var container = $("#contactForm2");
+
+                if (!container.is(e.target) // if the target of the click isn't the container...
+                    && container.has(e.target).length === 0) // ... nor a descendant of the container
+                {
+                    container.fadeOut();
+                }
+            });
+
+        });
+    </script>
+        <script>
+        $(function () {
+
+            // contact form animations
+            $('#contact3').click(function () {
+                $('#contactForm3').fadeToggle();
+            })
+            $(document).mouseup(function (e) {
+                var container = $("#contactForm3");
+
+                if (!container.is(e.target) // if the target of the click isn't the container...
+                    && container.has(e.target).length === 0) // ... nor a descendant of the container
+                {
+                    container.fadeOut();
+                }
+            });
+
+        });
+    </script>
+            <script>
+        $(function () {
+
+            // contact form animations
+            $('#contact4').click(function () {
+                $('#contactForm4').fadeToggle();
+            })
+            $(document).mouseup(function (e) {
+                var container = $("#contactForm4");
+
+                if (!container.is(e.target) // if the target of the click isn't the container...
+                    && container.has(e.target).length === 0) // ... nor a descendant of the container
+                {
+                    container.fadeOut();
+                }
+            });
+
+        });
     </script>
 </body>
 </html>
